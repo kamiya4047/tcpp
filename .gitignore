@@ -1,0 +1,8 @@
+/build/
+/out/
+/dist/
+*.user
+*.pdb
+*.obj
+*.tmp
+test-settings.ini

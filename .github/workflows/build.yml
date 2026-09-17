@@ -1,0 +1,28 @@
+name: Windows and portable validation
+on: [push, pull_request]
+jobs:
+  windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake --preset windows
+      - run: cmake --build build/windows --config ${{ matrix.configuration }} --parallel
+      - run: ctest --test-dir build/windows -C ${{ matrix.configuration }} --output-on-failure
+      - if: matrix.configuration == 'Release'
+        run: build/windows/Release/decoder_cli.exe --benchmark
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-${{ matrix.configuration }}
+          path: |
+            build/windows/${{ matrix.configuration }}/*.exe
+            build/windows/src/windows_tsf/${{ matrix.configuration }}/*
+  portable:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build --parallel
+      - run: ctest --test-dir build --output-on-failure
