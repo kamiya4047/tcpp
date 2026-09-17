@@ -1,5 +1,8 @@
 name: Windows and portable validation
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
 jobs:
   windows:
     runs-on: windows-latest
@@ -9,8 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: cmake --preset windows
-      - run: cmake --build build/windows --config ${{ matrix.configuration }} --parallel
-      - run: ctest --test-dir build/windows -C ${{ matrix.configuration }} --output-on-failure
+      - run: cmake --build --preset ${{ matrix.configuration == 'Debug' && 'debug' || 'release' }} --parallel
+      - run: ctest --preset ${{ matrix.configuration == 'Debug' && 'debug' || 'release' }}
       - if: matrix.configuration == 'Release'
         run: build/windows/Release/decoder_cli.exe --benchmark
       - uses: actions/upload-artifact@v4
@@ -23,6 +26,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-      - run: cmake --build build --parallel
-      - run: ctest --test-dir build --output-on-failure
+      - run: cmake --preset portable
+      - run: cmake --build build/portable --parallel
+      - run: ctest --test-dir build/portable --output-on-failure
